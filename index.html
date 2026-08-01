@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Meu Treino da Semana</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,6 +31,8 @@
     color: var(--chalk);
     font-family: 'Work Sans', sans-serif;
     min-height: 100vh;
+    /* Previne comportamentos de bounce que podem interferir em animações no iOS */
+    overscroll-behavior-y: none;
   }
 
   body {
@@ -93,14 +95,24 @@
     flex-shrink: 0;
   }
 
+  /* 🛠️ CORREÇÃO iPHONE 1: Força a GPU a renderizar a animação sem travar */
   .save-status .dot.saving {
     background: var(--rust);
+    -webkit-animation: pulse 0.8s ease-in-out infinite;
     animation: pulse 0.8s ease-in-out infinite;
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    will-change: transform, opacity;
+  }
+
+  @-webkit-keyframes pulse {
+    0%, 100% { opacity: 1; -webkit-transform: scale(1); transform: scale(1); }
+    50% { opacity: 0.4; -webkit-transform: scale(0.8); transform: scale(0.8); }
   }
 
   @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.8); }
+    0%, 100% { opacity: 1; -webkit-transform: scale(1); transform: scale(1); }
+    50% { opacity: 0.4; -webkit-transform: scale(0.8); transform: scale(0.8); }
   }
 
   .save-status .backup-btn {
@@ -505,6 +517,15 @@
     display: block;
   }
 
+  /* 🛠️ CORREÇÃO iPHONE 2: Impede que GIFs congelem ao rolar a tela no Safari */
+  .media-image, .media-embed {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform;
+  }
+
   .media-image {
     width: 100%;
     max-height: 360px;
@@ -726,9 +747,6 @@
 
   var DAY_ORDER = ['seg', 'ter', 'qua', 'qui', 'sex'];
 
-  // ============================================
-  // TODOS OS EXERCÍCIOS COM GIFS - COMPLETO
-  // ============================================
   var DAY_DEFAULTS = {
     seg: {
       name: 'Segunda',
@@ -1101,7 +1119,7 @@
       return '<img class="media-image" src="' + escapeHtml(url) + '" alt="Demonstração do exercício" loading="lazy">';
     }
     if (/\.(mp4|webm|ogv|mov|m4v|avi|mkv)(\?.*)?$/i.test(url)) {
-      return '<div class="media-embed"><video src="' + escapeHtml(url) + '" controls playsinline></video></div>';
+      return '<div class="media-embed"><video src="' + escapeHtml(url) + '" controls playsinline loop muted></video></div>';
     }
     if (/youtube\.com\/results\?/.test(url)) {
       return '<a class="media-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">🔍 Buscar vídeos deste exercício no YouTube ↗</a>';
@@ -1114,7 +1132,7 @@
       return '<img class="media-image" src="' + preview.url + '" alt="Demonstração do exercício" loading="lazy">';
     }
     var mime = preview.mime || 'video/mp4';
-    return '<div class="media-embed"><video controls playsinline autoplay muted>' +
+    return '<div class="media-embed"><video controls playsinline autoplay muted loop>' +
       '<source src="' + preview.url + '" type="' + escapeHtml(mime) + '">' +
       'Seu navegador não consegue reproduzir este arquivo.' +
       '</video></div>';
